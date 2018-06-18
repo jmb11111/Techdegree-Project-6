@@ -3,6 +3,8 @@ const fs = require('fs');
 const request = require('request');
 const cheerio = require('cheerio');
 const Json2csvParser = require('json2csv').Parser;
+const datafolder = './data';
+
 
 //declared global variables
 // variables include dates for usage in when the links were gotten and file creation
@@ -12,18 +14,18 @@ const today = new Date();
 const date = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
 const time = new Date().toLocaleTimeString();
 const shirtinfo = [];
-const fields = ['Title', 'Price', 'Link', 'ImageURL', 'Time'];
-const errorMessage = `[${today}] There’s been a 404 error. Cannot connect to http://shirts4mike.com.`;
+const fields = ['Title', 'Price','ImageURL','Link',  'Time'];
+const connectErrorMessage = `[${today}] There’s been a 404 error. Cannot connect to http://shirts4mike.com.`;
+const writingError = `Error occured writing the file or folder`;
 
-
-function errorMessageLogger() {
-    console.log(errorMessage);
-    fs.appendFile(`scraper-error.log`, errorMessage, function (err) {
+function errorMessageLogger(specificMessage) {
+    console.log(specificMessage);
+    fs.appendFile(`scraper-error.log`, specificMessage, function (err) {
         if (err) {
-            console.log(err);
+            console.log(writingError);
         }
         console.log("The error file was saved!");
-        console.log(errorMessage);
+        console.log(specificMessage);
     });
 }
 
@@ -42,7 +44,7 @@ request('http://shirts4mike.com/shirts.php', function (error, response, html) {
             links.push(link);
         });
     } else {
-        errorMessageLogger()
+        errorMessageLogger(connectErrorMessage);
     }
 
     const start = new Date().getTime();
@@ -64,12 +66,12 @@ request('http://shirts4mike.com/shirts.php', function (error, response, html) {
                 metadata = {
                     Title: Title,
                     Price: price,
-                    Link: Link,
                     ImageURL: ImageURL,
+                    Link: Link,
                     Time: time + " " + date
                 };
             } else {
-                errorMessageLogger()
+                errorMessageLogger(connectErrorMessage)
 
             }
             //pushes each object to the shirt info array
@@ -91,14 +93,25 @@ request('http://shirts4mike.com/shirts.php', function (error, response, html) {
             const csv = json2csvParser.parse(shirtinfo);
             //creates a file with the name of the date. if its the same date as original, 
             //such as if it is run twice it overwrites, but if its a new date it creates 
-            //a new file
+            //a new file, also checks for a data folder and creates one if it doesnt exist
+            
+            if (!fs.existsSync(datafolder)){
+                fs.mkdirSync(datafolder);
+                fs.writeFile(`data/${date}.csv`, csv, function (err) {
+                    if (err) {
+                        errorMessageLogger(writingError)
+                    }
+    
+                    console.log("The file was saved!");
+                })
+            }else{
             fs.writeFile(`data/${date}.csv`, csv, function (err) {
                 if (err) {
-                    errorMessageLogger()
+                    errorMessageLogger(writingError)
                 }
 
                 console.log("The file was saved!");
-            });
+            });}
         }, time * 1000);
     }
 });
