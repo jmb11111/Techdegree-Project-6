@@ -98,7 +98,6 @@ request('http://shirts4mike.com/shirts.php', function (error, response, html) {
                 }
 
                 console.log("The file was saved!");
-                console.log(today);
             });
         }, time * 1000);
     }

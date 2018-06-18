@@ -4,6 +4,7 @@
   "description": "Scrape le web.",
   "main": "server.js",
   "author": "Scotch",
+  "scripts": { "start": "node scraper.js"},
   "dependencies": {
     "cheerio": "latest",
     "jsonexport": "latest",
